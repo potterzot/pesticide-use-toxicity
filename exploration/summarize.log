@@ -1,0 +1,73 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\exploration\summarize.log
+  log type:  text
+ opened on:  30 Jan 2015, 16:16:31
+
+. 
+. 
+. ***************
+. * 2. Load data
+. 
+. insheet using "data\cleaned_data.csv"
+(10 vars, 89251 obs)
+
+. save "data\cleaned_data.dta", replace
+file data\cleaned_data.dta saved
+
+. 
+. * sort
+. sort commodity state pesticidename variable year
+
+. 
+. * Replace missing state with "United States"
+. replace state = "United States" if missing(state)==1
+(14258 real changes made)
+
+. 
+. * Convert value to a numeric variable
+. destring value, gen(v) ignore(,) force
+value contains nonnumeric characters; v generated as double
+value: characters , removed; v generated as double
+(9744 missing values generated)
+
+. 
+. **************
+. * 3. Interpolate data
+. 
+. ***first, we need to add years that weren't surveyed
+. * Generate a group id for the variables that comprise each group
+. egen groupid = group(commodity state pesticidename pesticidetype variable)
+
+. 
+. * tsset the data. This makes stata treat this as a group of time series values
+. tsset groupid year
+       panel variable:  groupid (unbalanced)
+        time variable:  year, 1990 to 2012, but with gaps
+                delta:  1 unit
+
+. 
+. * create new years
+. tsfill, full
+
+. 
+. * interpolate the values
+. ipolate v year, gen(ivalue)
+
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. * close the log
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\exploration\summarize.log
+  log type:  text
+ closed on:  30 Jan 2015, 16:16:38
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
