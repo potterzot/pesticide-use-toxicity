@@ -1,0 +1,180 @@
+---------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  E:\Documents\Internship Stuff\Pesticide and Residue Project\pesticid
+> e-use-toxicity\Working with data.smcl
+  log type:  smcl
+ opened on:   4 Feb 2015, 16:53:55
+
+. name log Jake Scourey
+unrecognized command:  name
+r(199);
+
+. rename log Jake Scourey
+syntax error
+    Syntax is
+        rename  oldname    newname   [, renumber[(#)] addnumber[(#)] sort ...]
+        rename (oldnames) (newnames) [, renumber[(#)] addnumber[(#)] sort ...]
+        rename  oldnames              , {upper|lower|proper}
+r(198);
+
+. insheet using "data\All Corn, Cotton, Soybean Data.csv"
+(9 vars, 89251 obs)
+
+. rename restricteduse1unrestricted0 = Restricted
+syntax error
+    Syntax is
+        rename  oldname    newname   [, renumber[(#)] addnumber[(#)] sort ...]
+        rename (oldnames) (newnames) [, renumber[(#)] addnumber[(#)] sort ...]
+        rename  oldnames              , {upper|lower|proper}
+r(198);
+
+. rename restricteduse1unrestricted0 restricted
+
+. rename chemicaltype chem_type
+
+. rename chemicalid chem_id
+
+. sort commodity state pesticidename variable year
+variable pesticidename not found
+r(111);
+
+. sort commodity state chemical variable year
+
+. replace state = "United States" if missing(state)==1
+(14258 real changes made)
+
+. destring value, gen(v) ignore(,) force
+value contains nonnumeric characters; v generated as double
+value: characters , removed; v generated as double
+(9744 missing values generated)
+
+. drop value
+
+. rename v value
+
+. egen groupid = group(commodity state chemical chem_type variable)
+
+. tsset groupid year
+repeated time values within panel
+r(451);
+
+. tsset
+time variable not set, use -tsset varname ...-
+r(111);
+
+. isis  groupid year
+unrecognized command:  isis
+r(199);
+
+. isid groupid year
+variables groupid year do not uniquely identify the observations
+r(459);
+
+. duplicates report  groupid year
+
+Duplicates in terms of groupid year
+
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |        87951             0
+        2 |         1300           650
+--------------------------------------
+
+. duplicates list  groupid year
+
+Duplicates in terms of groupid year
+
+  +---------------------------------+
+  | group:    obs:   groupid   year |
+  |---------------------------------|
+  |      1   24317      5142   2010 |
+  |      1   24318      5142   2010 |
+  |      2   24333      5143   2010 |
+  |      2   24334      5143   2010 |
+  |      3   24349      5144   2010 |
+  |---------------------------------|
+  |      3   24350      5144   2010 |
+  |      4   24365      5145   2010 |
+  |      4   24366      5145   2010 |
+  |      5   24381      5146   2010 |
+  |      5   24382      5146   2010 |
+  
+. drop groupid
+
+. egen groupid = group(commodity state chemical chem_type restricted variable)
+
+. isid groupid year
+
+. duplicates report  groupid year
+
+Duplicates in terms of groupid year
+
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |        89251             0
+--------------------------------------
+
+. duplicates list  groupid year
+
+Duplicates in terms of groupid year
+
+(0 observations are duplicates)
+
+. good to go
+unrecognized command:  good
+r(199);
+
+. tsset groupid year
+       panel variable:  groupid (unbalanced)
+        time variable:  year, 1990 to 2012, but with gaps
+                delta:  1 unit
+
+. tsfill, full
+
+. ipolate  value year, gen(ivalue)
+
+. ipolate  value year, gen(ivalue2), epolate
+invalid 'epolate' 
+r(198);
+
+. ipolate value year, gen(ivalue2) epolate
+
+. drop ivalue ivalue2
+
+. by variable: ipolate groupid year, gen(ivalue)
+not sorted
+r(5);
+
+. by  groupid: ipolate groupid year, gen(ivalue)
+
+. drop ivalue
+
+. by  groupid: ipolate value year, gen(ivalue)
+(338904 missing values generated)
+
+. so close!
+variable close not found
+r(111);
+
+. sort variable commodity state chemical year
+
+. by variable: ipolate value year, gen(ivalue)
+ivalue already defined
+r(110);
+
+. by variable: ipolate value year, gen(ivalue2)
+(374590 missing values generated)
+
+. drop ivalue2
+
+. sort commodity state chemical variable year
+
+. log close
+      name:  <unnamed>
+       log:  E:\Documents\Internship Stuff\Pesticide and Residue Project\pesticid
+> e-use-toxicity\Working with data.smcl
+  log type:  smcl
+ closed on:   4 Feb 2015, 18:06:40
+---------------------------------------------------------------------------------
