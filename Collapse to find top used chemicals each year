@@ -1,0 +1,10 @@
+*Load data
+xmluse "E:\Documents\Internship Stuff\Pesticide and Residue Project\pesticide-use-toxicity\Data\Ipolated and collapsed.xml", doctype(excel) firstrow
+
+*Drop irrelevant observations
+keep if variable == "APPLICATIONS, MEASURED IN LB"
+*Groupid (not sure if this is nessesary)
+egen groupid = group( year commodity chemical)
+*and sum all the states each year
+collapse (sum) ivalue, by(commodity chemical year)
+*Done. Data can now be sorted to see order of most used chemicals each year
