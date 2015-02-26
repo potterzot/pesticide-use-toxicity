@@ -1,0 +1,124 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
+  log type:  text
+ opened on:  11 Feb 2015, 16:54:39
+
+. 
+. *load the data
+. insheet using "data/all_corn_soybean_cotton_pest_use.csv"
+(9 vars, 89251 obs)
+
+. 
+. *fixes
+. replace state = "United States" if missing(state)==1
+(14258 real changes made)
+
+. destring value, gen(v) ignore(,) force
+value contains nonnumeric characters; v generated as double
+value: characters , removed; v generated as double
+(9744 missing values generated)
+
+. 
+. *sort and generate groupid
+. sort commodity state chemical variable year
+
+. egen groupid = group(commodity state chemical chemicaltype restricted variable)
+
+. 
+. *duplicates by groupid?
+. duplicates report groupid year
+
+Duplicates in terms of groupid year
+
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |        89251             0
+--------------------------------------
+
+. 
+. *tsset the data
+. tsset groupid year
+       panel variable:  groupid (unbalanced)
+        time variable:  year, 1990 to 2012, but with gaps
+                delta:  1 unit
+
+. tsfill, full
+
+. 
+. *save tempfile
+. tempfile original
+
+. save "`original'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp saved
+
+. 
+. *save tempfile of just values
+. keep groupid year value v
+
+. tempfile valuedata
+
+. save "`valuedata'"
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000006.tmp saved
+
+. 
+. *save tempfile of just categorical data, one row for each groupid
+. use "`original'"
+
+. drop year value v
+
+. bysort groupid: keep if _n==1
+(443674 observations deleted)
+
+. tempfile categorical
+
+. save "`categorical'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp saved
+
+. 
+. * merge the year and value data to the categorical data
+. merge 1:m groupid using "`valuedata'"
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                           463,841  (_merge==3)
+    -----------------------------------------
+
+. 
+. *check merge
+. tab _merge
+
+                 _merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+            matched (3) |    463,841      100.00      100.00
+------------------------+-----------------------------------
+                  Total |    463,841      100.00
+
+. 
+. *interopolate missing years
+. *by variable: ipolate value year, gen(ivalue2)
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
+  log type:  text
+ closed on:  11 Feb 2015, 16:54:45
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
