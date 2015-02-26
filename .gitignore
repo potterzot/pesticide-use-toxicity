@@ -1,5 +1,10 @@
 # data files
 .csv
+.dta
+data/
+
+# log files
+.log
 
 # History files
 .Rhistory
