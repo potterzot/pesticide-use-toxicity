@@ -3,9 +3,6 @@
 .dta
 data/
 
-# log files
-.log
-
 # History files
 .Rhistory
 
