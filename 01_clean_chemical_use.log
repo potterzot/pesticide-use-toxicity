@@ -1,0 +1,118 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
+  log type:  text
+ opened on:  26 Feb 2015, 15:12:19
+
+. 
+. *load the data
+. insheet using "data/chemical_use_raw.csv"
+(21 vars, 15514 obs)
+
+. 
+. *keep only the variables we want
+. keep year period geolevel state stateansi commodity dataitem domain domaincategory value
+
+. 
+. *fix state if missing
+. replace state = "United States" if missing(state)==1
+(0 real changes made)
+
+. 
+. *convert value to numbers
+. rename value value_raw
+
+. destring value_raw, gen(value) ignore(,) force
+value_raw contains nonnumeric characters; value generated as long
+value_raw: characters , removed; value generated as long
+(1691 missing values generated)
+
+. 
+. *set missing value codes
+. replace value = .d if value_raw==" (D)"
+(1632 real changes made, 1632 to missing)
+
+. replace value = .n if value_raw==" (NA)"
+(25 real changes made, 25 to missing)
+
+. replace value = .d if value_raw==" (Z)"
+(34 real changes made, 34 to missing)
+
+. 
+. *create a full crop name to distinguish between cotton and cotton, upland
+. split dataitem, parse(-) gen(var)
+variables created as string: 
+var1  var2
+
+. rename var1 crop
+
+. 
+. *create a measure stripped of extra text
+. split var2, parse(,) gen(m)
+variables created as string: 
+m1  m2
+
+. rename m1 measure
+
+. 
+. *create a chemical_type variable
+. split domain, parse(, ) gen(t)
+variables created as string: 
+t1  t2
+
+. rename t1 chemical_type
+
+. replace chemical_type = t2 if chemical_type=="CHEMICAL"
+chemical_type was str10 now str12
+(13502 real changes made)
+
+. 
+. *create a chemical_name
+. split domaincategory, parse(: ) gen(a)
+variables created as string: 
+a1  a2
+
+. split a2, parse( = ) gen(b)
+variables created as string: 
+b1  b2
+
+. replace b1 = trim(b1)
+(12389 real changes made)
+
+. gen chemical_name = substr(b1,2,.) if chemical_type!="FERTILIZER"
+(2012 missing values generated)
+
+. replace chemical_name = substr(b1,2,length(b1)-1) if chemical_type=="FERTILIZER"
+(2012 real changes made)
+
+. replace chemical_name = "TOTAL" if b1=="(TOTAL)"
+(1113 real changes made)
+
+. 
+. *create a chemical id variable
+. replace b2 = trim(b2)
+(12389 real changes made)
+
+. gen chemical_id = substr(b2,1,length(b2)-1)
+(3125 missing values generated)
+
+. replace chemical_id = substr(chemical_name,1,3) if chemical_type=="FERTILIZER" | chemical_name=="TOTAL"
+(3125 real changes made)
+
+. 
+. *drop temporary variables
+. drop var2 m2 t2 a1 a2 b1 b2
+
+. 
+. 
+. 
+. *save the data as a csv file
+. outsheet using "data/chemical_use_clean.csv", comma nolabel replace
+
+. 
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
+  log type:  text
+ closed on:  26 Feb 2015, 15:12:20
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

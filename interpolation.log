@@ -2,90 +2,48 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- opened on:  11 Feb 2015, 16:54:39
+ opened on:  26 Feb 2015, 15:38:46
 
 . 
-. *load the data
-. insheet using "data/all_corn_soybean_cotton_pest_use.csv"
-(9 vars, 89251 obs)
+. * load the chemical use data and save to a tempfile
+. insheet using "data/chemical_use_ipol.csv"
+(18 vars, 96278 obs)
 
-. 
-. *fixes
-. replace state = "United States" if missing(state)==1
-(14258 real changes made)
+. keep state year crop ivalue measure chemical_name chemical_type chemical_id
 
-. destring value, gen(v) ignore(,) force
-value contains nonnumeric characters; v generated as double
-value: characters , removed; v generated as double
-(9744 missing values generated)
+. keep if measure=="APPLICATIONS"
+(83329 observations deleted)
 
-. 
-. *sort and generate groupid
-. sort commodity state chemical variable year
+. drop measure
 
-. egen groupid = group(commodity state chemical chemicaltype restricted variable)
+. rename ivalue appl_lbs
 
-. 
-. *duplicates by groupid?
-. duplicates report groupid year
+. tempfile chemical_use
 
-Duplicates in terms of groupid year
-
---------------------------------------
-   copies | observations       surplus
-----------+---------------------------
-        1 |        89251             0
---------------------------------------
-
-. 
-. *tsset the data
-. tsset groupid year
-       panel variable:  groupid (unbalanced)
-        time variable:  year, 1990 to 2012, but with gaps
-                delta:  1 unit
-
-. tsfill, full
-
-. 
-. *save tempfile
-. tempfile original
-
-. save "`original'", replace
+. save "`chemical_use'", replace
 (note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp not found)
 file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp saved
 
 . 
-. *save tempfile of just values
-. keep groupid year value v
+. * load the acres data
+. clear
 
-. tempfile valuedata
+. insheet using "data/acres_clean.csv"
+(13 vars, 9986 obs)
 
-. save "`valuedata'"
-file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000006.tmp saved
-
-. 
-. *save tempfile of just categorical data, one row for each groupid
-. use "`original'"
-
-. drop year value v
-
-. bysort groupid: keep if _n==1
-(443674 observations deleted)
-
-. tempfile categorical
-
-. save "`categorical'", replace
-(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp not found)
-file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp saved
+. keep year crop state acres
 
 . 
 . * merge the year and value data to the categorical data
-. merge 1:m groupid using "`valuedata'"
+. merge 1:m crop state year using "`chemical_use'"
 
     Result                           # of obs.
     -----------------------------------------
-    not matched                             0
-    matched                           463,841  (_merge==3)
+    not matched                         8,698
+        from master                     8,698  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                            12,949  (_merge==3)
     -----------------------------------------
 
 . 
@@ -94,31 +52,33 @@ file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp saved
 
                  _merge |      Freq.     Percent        Cum.
 ------------------------+-----------------------------------
-            matched (3) |    463,841      100.00      100.00
+        master only (1) |      8,698       40.18       40.18
+            matched (3) |     12,949       59.82      100.00
 ------------------------+-----------------------------------
-                  Total |    463,841      100.00
+                  Total |     21,647      100.00
+
+. keep if _merge!=1
+(8698 observations deleted)
+
+. drop _merge
 
 . 
-. *interopolate missing years
-. *by variable: ipolate value year, gen(ivalue2)
+. *generate lbs per acre
+. gen lbs_per_acre = appl_lbs / acres
+(5539 missing values generated)
+
 . 
+. *save the data
+. sort crop state year chemical_name
+
+. save "data/use_acres_merged.dta", replace
+file data/use_acres_merged.dta saved
+
 . 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
-. 
+. *close log
 . log close
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- closed on:  11 Feb 2015, 16:54:45
+ closed on:  26 Feb 2015, 15:38:47
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

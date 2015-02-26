@@ -1,3 +1,7 @@
+*******************
+* 03_interpolate_chemical_use.do
+* Cleans the raw chemical use data and saves to a csv file the new variables
+*******************
 
 * Clear everything
 clear
@@ -18,15 +22,11 @@ cd "I:\nick\code\pesticide-use-toxicity\"
 log using "interpolation.log", replace
 
 *load the data
-insheet using "data/all_corn_soybean_cotton_pest_use.csv"
-
-*fixes
-replace state = "United States" if missing(state)==1
-destring value, gen(v) ignore(,) force
+insheet using "data/chemical_use_clean.csv"
 
 *sort and generate groupid
-sort commodity state chemical variable year
-egen groupid = group(commodity state chemical chemicaltype restricted variable)
+sort crop state chemical_name measure year
+egen groupid = group(crop state chemical_name chemical_type measure)
 
 *duplicates by groupid?
 duplicates report groupid year
@@ -40,13 +40,13 @@ tempfile original
 save "`original'", replace
 
 *save tempfile of just values
-keep groupid year value v
+keep groupid year value
 tempfile valuedata
 save "`valuedata'"
 
 *save tempfile of just categorical data, one row for each groupid
 use "`original'"
-drop year value v
+drop year value
 bysort groupid: keep if _n==1
 tempfile categorical
 save "`categorical'", replace
@@ -54,28 +54,17 @@ save "`categorical'", replace
 * merge the year and value data to the categorical data
 merge 1:m groupid using "`valuedata'"
 
-
 *check merge
 tab _merge
 assert _merge==3 //all merged correctly
+drop _merge
 
 *interopolate missing years
-by groupid: ipolate v year, gen(ivalue)
+bysort groupid: ipolate value year, gen(ivalue)
 
-*and that leaves us with just years following the last surveyed year
-
-
-
+*save the interpolated use data
+outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
 
 
-
-
-
-
-
-
-
-
-
-
+*close the log
 log close

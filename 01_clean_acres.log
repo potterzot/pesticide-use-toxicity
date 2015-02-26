@@ -1,0 +1,51 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\01_clean_acres.log
+  log type:  text
+ opened on:  26 Feb 2015, 15:27:05
+
+. 
+. *load the data
+. insheet using "data/acres_raw.csv"
+(21 vars, 10393 obs)
+
+. 
+. *keep only the variables we want
+. keep year period geolevel state stateansi commodity dataitem domain domaincategory value
+
+. 
+. *keep only full year observations
+. keep if period == "YEAR"
+(407 observations deleted)
+
+. 
+. *create a full crop name to distinguish between cotton and cotton, upland
+. *also create a full measure name
+. split dataitem, parse(-) gen(var)
+variables created as string: 
+var1  var2
+
+. rename var1 crop
+
+. rename var2 measure
+
+. 
+. *convert the value to a number
+. rename value value_raw
+
+. destring value_raw, gen(acres) ignore(,) force
+value_raw contains nonnumeric characters; acres generated as long
+value_raw: characters , removed; acres generated as long
+
+. 
+. 
+. *save the data as a csv file
+. outsheet using "data/acres_clean.csv", comma nolabel replace
+
+. 
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\01_clean_acres.log
+  log type:  text
+ closed on:  26 Feb 2015, 15:27:05
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
