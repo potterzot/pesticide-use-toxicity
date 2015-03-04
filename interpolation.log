@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- opened on:   4 Mar 2015, 14:34:05
+ opened on:   4 Mar 2015, 14:43:22
 
 . 
 . *load the data
@@ -125,16 +125,22 @@ file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp saved
 
 . 
 . * EXTRAPOLATION CODE GOES HERE
+. * for now, just a flat value
+. by groupid: replace ivalue=ivalue[_n-1] if missing(ivalue)==1
+(117896 real changes made)
+
 . 
 . 
 . *reshape the data from long to wide, so that each measure has it's own variable
-. reshape wide ivalue, i(groupid year) j(measurefac)
+. drop period dataitem domain domaincategory value_raw measure value groupid
+
+. reshape wide ivalue, i(crop state chemical_type chemical_id year) j(measurefac)
 (note: j = 1 2 3 4 5)
 
 Data                               long   ->   wide
 -----------------------------------------------------------------------------
-Number of obs.                   558440   ->  558440
-Number of variables                  19   ->      22
+Number of obs.                   558440   ->  115805
+Number of variables                  11   ->      14
 j variable (5 values)        measurefac   ->   (dropped)
 xij variables:
                                  ivalue   ->   ivalue1 ivalue2 ... ivalue5
@@ -153,13 +159,16 @@ xij variables:
 . 
 . 
 . *save the interpolated and reshaped use data
-. drop period dataitem domain domaincategory value_raw measure value
+. 
+. sort crop state chemical_id year
 
-. sort crop state measure chemical_id year
-variable measure not found
-r(111);
+. outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
 
-end of do-file
-
-r(111);
-
+. 
+. *close the log
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
+  log type:  text
+ closed on:   4 Mar 2015, 14:43:43
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
