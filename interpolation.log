@@ -2,48 +2,80 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- opened on:  26 Feb 2015, 15:38:46
+ opened on:   4 Mar 2015, 14:07:53
 
 . 
-. * load the chemical use data and save to a tempfile
-. insheet using "data/chemical_use_ipol.csv"
-(18 vars, 96278 obs)
+. *load the data
+. insheet using "data/chemical_use_clean.csv"
+(16 vars, 89548 obs)
 
-. keep state year crop ivalue measure chemical_name chemical_type chemical_id
+. 
+. *sort and generate groupid
+. sort crop state chemical_name measure year
 
-. keep if measure=="APPLICATIONS"
-(83329 observations deleted)
+. egen groupid = group(crop state chemical_name chemical_type measure)
 
-. drop measure
+. 
+. *duplicates by groupid?
+. duplicates report groupid year
 
-. rename ivalue appl_lbs
+Duplicates in terms of groupid year
 
-. tempfile chemical_use
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |        89548             0
+--------------------------------------
 
-. save "`chemical_use'", replace
+. 
+. *save tempfile of all variables
+. tempfile original
+
+. save "`original'", replace
 (note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp not found)
 file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp saved
 
 . 
-. * load the acres data
-. clear
+. *tsset the data
+. tsset groupid year
+       panel variable:  groupid (unbalanced)
+        time variable:  year, 1990 to 2012, but with gaps
+                delta:  1 unit
 
-. insheet using "data/acres_clean.csv"
-(13 vars, 9986 obs)
+. tsfill, full
 
-. keep year crop state acres
+. 
+. *save tempfile of just year and groupid
+. keep groupid year 
+
+. tempfile idyear
+
+. save "`idyear'"
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000006.tmp saved
+
+. 
+. *save tempfile of just categorical data, one row for each groupid
+. use "`original'"
+
+. drop year value
+
+. bysort groupid: keep if _n==1
+(65268 observations deleted)
+
+. tempfile categorical
+
+. save "`categorical'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000007.tmp saved
 
 . 
 . * merge the year and value data to the categorical data
-. merge 1:m crop state year using "`chemical_use'"
+. merge 1:m groupid using "`idyear'"
 
     Result                           # of obs.
     -----------------------------------------
-    not matched                         8,698
-        from master                     8,698  (_merge==1)
-        from using                          0  (_merge==2)
-
-    matched                            12,949  (_merge==3)
+    not matched                             0
+    matched                           558,440  (_merge==3)
     -----------------------------------------
 
 . 
@@ -52,33 +84,45 @@ file C:\Users\POTTER~1\AppData\Local\Temp\ST_01000005.tmp saved
 
                  _merge |      Freq.     Percent        Cum.
 ------------------------+-----------------------------------
-        master only (1) |      8,698       40.18       40.18
-            matched (3) |     12,949       59.82      100.00
+            matched (3) |    558,440      100.00      100.00
 ------------------------+-----------------------------------
-                  Total |     21,647      100.00
+                  Total |    558,440      100.00
 
-. keep if _merge!=1
-(8698 observations deleted)
+. assert _merge==3 //all merged correctly
 
 . drop _merge
 
 . 
-. *generate lbs per acre
-. gen lbs_per_acre = appl_lbs / acres
-(5539 missing values generated)
+. *now add the values
+. merge 1:1 groupid year using "`original'"
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                       468,892
+        from master                   468,892  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                            89,548  (_merge==3)
+    -----------------------------------------
 
 . 
-. *save the data
-. sort crop state year chemical_name
-
-. save "data/use_acres_merged.dta", replace
-file data/use_acres_merged.dta saved
+. *interopolate missing years
+. bysort groupid: ipolate value year, gen(ivalue)
+(433682 missing values generated)
 
 . 
-. *close log
+. sort crop state measure chemical_id year
+
+. 
+. *save the interpolated use data
+. outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
+
+. 
+. 
+. *close the log
 . log close
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- closed on:  26 Feb 2015, 15:38:47
+ closed on:   4 Mar 2015, 14:08:21
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

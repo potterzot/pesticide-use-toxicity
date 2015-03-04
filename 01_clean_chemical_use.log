@@ -2,12 +2,12 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
   log type:  text
- opened on:  26 Feb 2015, 15:12:19
+ opened on:   4 Mar 2015, 14:07:19
 
 . 
 . *load the data
 . insheet using "data/chemical_use_raw.csv"
-(21 vars, 15514 obs)
+(20 vars, 89548 obs)
 
 . 
 . *keep only the variables we want
@@ -15,28 +15,42 @@
 
 . 
 . *fix state if missing
-. replace state = "United States" if missing(state)==1
-(0 real changes made)
+. replace state = "UNITED STATES" if missing(state)==1
+(14299 real changes made)
+
+. 
+. *state ansi is a 2 digit code
+. replace stateansi=0 if state=="UNITED STATES"
+(14299 real changes made)
+
+. tostring(stateansi), replace
+stateansi was byte now str2
+
+. gen ansi = "0"+stateansi
+
+. drop stateansi
+
+. rename ansi stateansi
 
 . 
 . *convert value to numbers
 . rename value value_raw
 
 . destring value_raw, gen(value) ignore(,) force
-value_raw contains nonnumeric characters; value generated as long
-value_raw: characters , removed; value generated as long
-(1691 missing values generated)
+value_raw contains nonnumeric characters; value generated as double
+value_raw: characters , removed; value generated as double
+(9925 missing values generated)
 
 . 
 . *set missing value codes
 . replace value = .d if value_raw==" (D)"
-(1632 real changes made, 1632 to missing)
+(0 real changes made)
 
 . replace value = .n if value_raw==" (NA)"
-(25 real changes made, 25 to missing)
+(0 real changes made)
 
 . replace value = .d if value_raw==" (Z)"
-(34 real changes made, 34 to missing)
+(0 real changes made)
 
 . 
 . *create a full crop name to distinguish between cotton and cotton, upland
@@ -48,11 +62,28 @@ var1  var2
 
 . 
 . *create a measure stripped of extra text
-. split var2, parse(,) gen(m)
+. split var2, parse(", ") gen(m)
 variables created as string: 
-m1  m2
+m1  m2  m3
 
-. rename m1 measure
+. gen measure = "None"
+
+. replace measure = "LBS APPLIED" if m2=="MEASURED IN LB"
+measure was str4 now str11
+(18548 real changes made)
+
+. replace measure = "LBS PER ACRE APPLICATION" if m2=="MEASURED IN LB / ACRE / APPLICATION"
+measure was str11 now str24
+(17402 real changes made)
+
+. replace measure = "LBS PER ACRE YEAR" if m2=="MEASURED IN LB / ACRE / YEAR"
+(17402 real changes made)
+
+. replace measure = "NUM APPLICATIONS" if m2=="MEASURED IN NUMBER"
+(17524 real changes made)
+
+. replace measure = "PCT AREA TREATED" if m2=="MEASURED IN PCT OF AREA PLANTED"
+(18672 real changes made)
 
 . 
 . *create a chemical_type variable
@@ -63,8 +94,7 @@ t1  t2
 . rename t1 chemical_type
 
 . replace chemical_type = t2 if chemical_type=="CHEMICAL"
-chemical_type was str10 now str12
-(13502 real changes made)
+(77824 real changes made)
 
 . 
 . *create a chemical_name
@@ -77,34 +107,32 @@ variables created as string:
 b1  b2
 
 . replace b1 = trim(b1)
-(12389 real changes made)
+(75664 real changes made)
 
 . gen chemical_name = substr(b1,2,.) if chemical_type!="FERTILIZER"
-(2012 missing values generated)
+(11074 missing values generated)
 
-. replace chemical_name = substr(b1,2,length(b1)-1) if chemical_type=="FERTILIZER"
-(2012 real changes made)
+. replace chemical_name = substr(b1,2,length(b1)-2) if chemical_type=="FERTILIZER"
+(11074 real changes made)
 
 . replace chemical_name = "TOTAL" if b1=="(TOTAL)"
-(1113 real changes made)
+(2810 real changes made)
 
 . 
 . *create a chemical id variable
 . replace b2 = trim(b2)
-(12389 real changes made)
+(75664 real changes made)
 
 . gen chemical_id = substr(b2,1,length(b2)-1)
-(3125 missing values generated)
+(13884 missing values generated)
 
 . replace chemical_id = substr(chemical_name,1,3) if chemical_type=="FERTILIZER" | chemical_name=="TOTAL"
-(3125 real changes made)
+(13884 real changes made)
 
 . 
 . *drop temporary variables
-. drop var2 m2 t2 a1 a2 b1 b2
+. drop var2 m1 m2 m3 t2 a1 a2 b1 b2
 
-. 
-. 
 . 
 . *save the data as a csv file
 . outsheet using "data/chemical_use_clean.csv", comma nolabel replace
@@ -114,5 +142,5 @@ b1  b2
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
   log type:  text
- closed on:  26 Feb 2015, 15:12:20
+ closed on:   4 Mar 2015, 14:07:25
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

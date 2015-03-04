@@ -28,7 +28,14 @@ insheet using "data/chemical_use_raw.csv"
 keep year period geolevel state stateansi commodity dataitem domain domaincategory value
 
 *fix state if missing
-replace state = "United States" if missing(state)==1
+replace state = "UNITED STATES" if missing(state)==1
+
+*state ansi is a 2 digit code
+replace stateansi=0 if state=="UNITED STATES"
+tostring(stateansi), replace
+gen ansi = "0"+stateansi
+drop stateansi
+rename ansi stateansi
 
 *convert value to numbers
 rename value value_raw
@@ -44,8 +51,13 @@ split dataitem, parse(-) gen(var)
 rename var1 crop
 
 *create a measure stripped of extra text
-split var2, parse(,) gen(m)
-rename m1 measure
+split var2, parse(", ") gen(m)
+gen measure = "None"
+replace measure = "LBS APPLIED" if m2=="MEASURED IN LB"
+replace measure = "LBS PER ACRE APPLICATION" if m2=="MEASURED IN LB / ACRE / APPLICATION"
+replace measure = "LBS PER ACRE YEAR" if m2=="MEASURED IN LB / ACRE / YEAR"
+replace measure = "NUM APPLICATIONS" if m2=="MEASURED IN NUMBER"
+replace measure = "PCT AREA TREATED" if m2=="MEASURED IN PCT OF AREA PLANTED"
 
 *create a chemical_type variable
 split domain, parse(, ) gen(t)
@@ -57,7 +69,7 @@ split domaincategory, parse(: ) gen(a)
 split a2, parse( = ) gen(b)
 replace b1 = trim(b1)
 gen chemical_name = substr(b1,2,.) if chemical_type!="FERTILIZER"
-replace chemical_name = substr(b1,2,length(b1)-1) if chemical_type=="FERTILIZER"
+replace chemical_name = substr(b1,2,length(b1)-2) if chemical_type=="FERTILIZER"
 replace chemical_name = "TOTAL" if b1=="(TOTAL)"
 
 *create a chemical id variable
@@ -66,9 +78,7 @@ gen chemical_id = substr(b2,1,length(b2)-1)
 replace chemical_id = substr(chemical_name,1,3) if chemical_type=="FERTILIZER" | chemical_name=="TOTAL"
 
 *drop temporary variables
-drop var2 m2 t2 a1 a2 b1 b2
-
-
+drop var2 m1 m2 m3 t2 a1 a2 b1 b2
 
 *save the data as a csv file
 outsheet using "data/chemical_use_clean.csv", comma nolabel replace

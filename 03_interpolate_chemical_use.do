@@ -31,18 +31,18 @@ egen groupid = group(crop state chemical_name chemical_type measure)
 *duplicates by groupid?
 duplicates report groupid year
 
+*save tempfile of all variables
+tempfile original
+save "`original'", replace
+
 *tsset the data
 tsset groupid year
 tsfill, full
 
-*save tempfile
-tempfile original
-save "`original'", replace
-
-*save tempfile of just values
-keep groupid year value
-tempfile valuedata
-save "`valuedata'"
+*save tempfile of just year and groupid
+keep groupid year 
+tempfile idyear
+save "`idyear'"
 
 *save tempfile of just categorical data, one row for each groupid
 use "`original'"
@@ -52,17 +52,22 @@ tempfile categorical
 save "`categorical'", replace
 
 * merge the year and value data to the categorical data
-merge 1:m groupid using "`valuedata'"
+merge 1:m groupid using "`idyear'"
 
 *check merge
 tab _merge
 assert _merge==3 //all merged correctly
 drop _merge
 
+*now add the values
+merge 1:1 groupid year using "`original'"
+
 *interopolate missing years
 bysort groupid: ipolate value year, gen(ivalue)
 
+
 *save the interpolated use data
+sort crop state measure chemical_id year
 outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
 
 
