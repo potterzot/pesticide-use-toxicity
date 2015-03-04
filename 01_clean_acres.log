@@ -2,12 +2,12 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_acres.log
   log type:  text
- opened on:  26 Feb 2015, 15:27:05
+ opened on:   4 Mar 2015, 14:16:42
 
 . 
 . *load the data
 . insheet using "data/acres_raw.csv"
-(21 vars, 10393 obs)
+(21 vars, 11188 obs)
 
 . 
 . *keep only the variables we want
@@ -16,7 +16,24 @@
 . 
 . *keep only full year observations
 . keep if period == "YEAR"
-(407 observations deleted)
+(454 observations deleted)
+
+. 
+. *state ansi is a 2 digit code
+. replace state="UNITED STATES" if state=="US TOTAL"
+(439 real changes made)
+
+. replace stateansi=0 if state=="UNITED STATES"
+(439 real changes made)
+
+. tostring(stateansi), replace
+stateansi was byte now str2
+
+. gen ansi = "0"+stateansi
+
+. drop stateansi
+
+. rename ansi stateansi
 
 . 
 . *create a full crop name to distinguish between cotton and cotton, upland
@@ -47,5 +64,5 @@ value_raw: characters , removed; acres generated as long
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_acres.log
   log type:  text
- closed on:  26 Feb 2015, 15:27:05
+ closed on:   4 Mar 2015, 14:16:43
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

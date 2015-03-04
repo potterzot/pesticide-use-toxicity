@@ -53,11 +53,22 @@ rename var1 crop
 *create a measure stripped of extra text
 split var2, parse(", ") gen(m)
 gen measure = "None"
+gen measurefac = 0
+
 replace measure = "LBS APPLIED" if m2=="MEASURED IN LB"
+replace measurefac = 1 if m2=="MEASURED IN LB"
+
 replace measure = "LBS PER ACRE APPLICATION" if m2=="MEASURED IN LB / ACRE / APPLICATION"
+replace measurefac = 2 if m2=="MEASURED IN LB / ACRE / APPLICATION"
+
 replace measure = "LBS PER ACRE YEAR" if m2=="MEASURED IN LB / ACRE / YEAR"
+replace measurefac = 3 if m2=="MEASURED IN LB / ACRE / YEAR"
+
 replace measure = "NUM APPLICATIONS" if m2=="MEASURED IN NUMBER"
+replace measurefac = 4 if m2=="MEASURED IN NUMBER"
+
 replace measure = "PCT AREA TREATED" if m2=="MEASURED IN PCT OF AREA PLANTED"
+replace measurefac = 5 if m2=="MEASURED IN PCT OF AREA PLANTED"
 
 *create a chemical_type variable
 split domain, parse(, ) gen(t)

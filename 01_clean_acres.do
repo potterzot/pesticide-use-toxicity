@@ -30,6 +30,14 @@ keep year period geolevel state stateansi commodity dataitem domain domaincatego
 *keep only full year observations
 keep if period == "YEAR"
 
+*state ansi is a 2 digit code
+replace state="UNITED STATES" if state=="US TOTAL"
+replace stateansi=0 if state=="UNITED STATES"
+tostring(stateansi), replace
+gen ansi = "0"+stateansi
+drop stateansi
+rename ansi stateansi
+
 *create a full crop name to distinguish between cotton and cotton, upland
 *also create a full measure name
 split dataitem, parse(-) gen(var)

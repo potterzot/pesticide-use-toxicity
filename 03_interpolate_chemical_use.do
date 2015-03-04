@@ -62,14 +62,29 @@ drop _merge
 *now add the values
 merge 1:1 groupid year using "`original'"
 
+*check merge
+tab _merge
+drop _merge
+
 *interopolate missing years
 bysort groupid: ipolate value year, gen(ivalue)
 
+* EXTRAPOLATION CODE GOES HERE
 
-*save the interpolated use data
+
+*reshape the data from long to wide, so that each measure has it's own variable
+reshape wide ivalue, i(groupid year) j(measurefac)
+rename ivalue1 lbs_applied
+rename ivalue2 lbs_per_acre_app
+rename ivalue3 lbs_per_acre_yr
+rename ivalue4 num_apps
+rename ivalue5 pct_area_treated
+
+
+*save the interpolated and reshaped use data
+drop period dataitem domain domaincategory value_raw measure value
 sort crop state measure chemical_id year
 outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
-
 
 *close the log
 log close

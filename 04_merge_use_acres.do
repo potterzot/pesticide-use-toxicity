@@ -24,8 +24,8 @@ log using "interpolation.log", replace
 * load the chemical use data and save to a tempfile
 insheet using "data/chemical_use_ipol.csv"
 keep state year crop ivalue measure chemical_name chemical_type chemical_id
-*keep if measure=="APPLICATIONS"
-*drop measure
+keep if measure=="LBS APPLIED"
+drop measure
 rename ivalue appl_lbs
 tempfile chemical_use
 save "`chemical_use'", replace

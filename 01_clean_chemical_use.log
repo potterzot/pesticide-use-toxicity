@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
   log type:  text
- opened on:   4 Mar 2015, 14:07:19
+ opened on:   4 Mar 2015, 14:24:10
 
 . 
 . *load the data
@@ -68,21 +68,43 @@ m1  m2  m3
 
 . gen measure = "None"
 
+. gen measurefac = 0
+
+. 
 . replace measure = "LBS APPLIED" if m2=="MEASURED IN LB"
 measure was str4 now str11
 (18548 real changes made)
 
+. replace measurefac = 1 if m2=="MEASURED IN LB"
+(18548 real changes made)
+
+. 
 . replace measure = "LBS PER ACRE APPLICATION" if m2=="MEASURED IN LB / ACRE / APPLICATION"
 measure was str11 now str24
 (17402 real changes made)
 
+. replace measurefac = 2 if m2=="MEASURED IN LB / ACRE / APPLICATION"
+(17402 real changes made)
+
+. 
 . replace measure = "LBS PER ACRE YEAR" if m2=="MEASURED IN LB / ACRE / YEAR"
 (17402 real changes made)
 
+. replace measurefac = 3 if m2=="MEASURED IN LB / ACRE / YEAR"
+(17402 real changes made)
+
+. 
 . replace measure = "NUM APPLICATIONS" if m2=="MEASURED IN NUMBER"
 (17524 real changes made)
 
+. replace measurefac = 4 if m2=="MEASURED IN NUMBER"
+(17524 real changes made)
+
+. 
 . replace measure = "PCT AREA TREATED" if m2=="MEASURED IN PCT OF AREA PLANTED"
+(18672 real changes made)
+
+. replace measurefac = 5 if m2=="MEASURED IN PCT OF AREA PLANTED"
 (18672 real changes made)
 
 . 
@@ -142,5 +164,5 @@ b1  b2
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\01_clean_chemical_use.log
   log type:  text
- closed on:   4 Mar 2015, 14:07:25
+ closed on:   4 Mar 2015, 14:24:16
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
