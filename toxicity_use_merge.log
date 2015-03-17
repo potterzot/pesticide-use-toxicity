@@ -2,7 +2,7 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\toxicity_use_merge.log
   log type:  text
- opened on:  17 Mar 2015, 13:31:02
+ opened on:  17 Mar 2015, 13:38:27
 
 . 
 . *import data
@@ -120,9 +120,20 @@ chemical_name was str20 now str157
     -----------------------------------------
 
 . 
+. *keep the matches
+. keep if _merge==3
+(98100 observations deleted)
+
+. 
+. * save the data
+. save "data/use_toxicity_merged.dta", replace
+(note: file data/use_toxicity_merged.dta not found)
+file data/use_toxicity_merged.dta saved
+
+. 
 . log close
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\toxicity_use_merge.log
   log type:  text
- closed on:  17 Mar 2015, 13:31:03
+ closed on:  17 Mar 2015, 13:38:28
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

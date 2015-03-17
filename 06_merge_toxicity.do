@@ -66,5 +66,8 @@ merge m:1 crop chemical_name using "`toxicity'"
 *keep the matches
 keep if _merge==3
 
+* save the data
+save "data/use_toxicity_merged.dta", replace
+
 log close
 
