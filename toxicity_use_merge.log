@@ -1,0 +1,128 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\toxicity_use_merge.log
+  log type:  text
+ opened on:  17 Mar 2015, 13:31:02
+
+. 
+. *import data
+. insheet using "data\tolerances.csv"
+(3 vars, 9540 obs)
+
+. 
+. *manipulate data
+. rename v1 crop_orig
+
+. rename v2 chemical_name
+
+. rename v3 mrl
+
+. drop if crop_orig == "crop"
+(1 observation deleted)
+
+. gen match_crop = ""
+(9539 missing values generated)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "soybean"
+(0 real changes made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybean"
+match_crop was str1 now str8
+(45 real changes made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybeans"
+(1 real change made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybean, seed"
+(44 real changes made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybean, dry"
+(1 real change made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybean, (dry or succulent)"
+(1 real change made)
+
+. replace match_crop = "SOYBEANS" if crop_orig== "Soybean, (dry and succulent)"
+(0 real changes made)
+
+. replace match_crop = "COTTON" if crop_orig== "Cotton"
+(2 real changes made)
+
+. replace match_crop = "CORN" if crop_orig== "Corn"
+(3 real changes made)
+
+. replace match_crop = "CORN" if crop_orig== "Corn, grain"
+(21 real changes made)
+
+. drop if  match_crop == ""
+(9421 observations deleted)
+
+. sort crop_orig chemical_name
+
+. replace chemical_name = upper(chemical_name)
+(116 real changes made)
+
+. replace match_crop = upper(match_crop)
+(0 real changes made)
+
+. rename match_crop crop
+
+. 
+. *remove duplicates
+. egen groupid = group(crop chemical_name)
+
+. sort groupid
+
+. drop in 118
+(1 observation deleted)
+
+. drop in 94
+(1 observation deleted)
+
+. drop in 87
+(1 observation deleted)
+
+. drop in 84
+(1 observation deleted)
+
+. drop in 78
+(1 observation deleted)
+
+. tempfile toxicity
+
+. save "`toxicity'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000002.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000002.tmp saved
+
+. 
+. *import use data
+. clear
+
+. use "data/use_acres_merged.dta"
+
+. 
+. * replace cotton name
+. replace crop="COTTON" if crop=="COTTON, UPLAND"
+(27554 real changes made)
+
+. 
+. *merge
+. merge m:1 crop chemical_name using "`toxicity'"
+chemical_name was str20 now str157
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        98,100
+        from master                    98,049  (_merge==1)
+        from using                         51  (_merge==2)
+
+    matched                            17,756  (_merge==3)
+    -----------------------------------------
+
+. 
+. log close
+      name:  <unnamed>
+       log:  I:\nick\code\pesticide-use-toxicity\toxicity_use_merge.log
+  log type:  text
+ closed on:  17 Mar 2015, 13:31:03
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

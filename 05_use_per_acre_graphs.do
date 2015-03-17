@@ -1,7 +1,10 @@
 *set working directory
 
 *set log file
-log using "use_graphs.log"
+log using "use_graphs.log", replace
+
+* Set working directory (REPLACE THIS WITH YOUR DIRECTORY)
+cd "I:\nick\code\pesticide-use-toxicity\"
 
 *import data
 use "data/use_acres_merged.dta"
@@ -31,3 +34,5 @@ twoway (line lbs_per_acre year if chemical_type == "FERTILIZER", lwidth(medthick
 
 *US Pesticides Total
 twoway (line lbs_per_acre year if chemical_type == "HERBICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick)) if state == "UNITED STATES", ytitle(Lbs Applied Per Acre) xtitle(Year) title(Pesticide Use Per Acre) subtitle(United States) legend(order(1 "Herbicides" 2 "Fungicides" 3 "Insecticides"))
+
+log close

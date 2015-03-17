@@ -23,10 +23,7 @@ log using "interpolation.log", replace
 
 * load the chemical use data and save to a tempfile
 insheet using "data/chemical_use_ipol.csv"
-keep state year crop ivalue measure chemical_name chemical_type chemical_id
-keep if measure=="LBS APPLIED"
-drop measure
-rename ivalue appl_lbs
+keep state year crop lbs_applied lbs_per_acre_app lbs_per_acre_yr num_apps pct_area_treated chemical_name chemical_type chemical_id
 tempfile chemical_use
 save "`chemical_use'", replace
 
@@ -44,7 +41,11 @@ keep if _merge!=1
 drop _merge
 
 *generate lbs per acre
-gen lbs_per_acre = appl_lbs / acres
+gen lbs_per_acre = lbs_applied / acres
+
+* remove spaces...
+replace crop = trim(crop)
+replace chemical_name = trim(chemical_name)
 
 *save the data
 sort crop state year chemical_name
