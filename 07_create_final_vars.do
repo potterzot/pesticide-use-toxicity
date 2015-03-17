@@ -10,6 +10,9 @@ use use "data/use_toxicity_merged.dta"
 drop _merge
 
 * fix mrl variable and destring
+replace mrl =".05" if mrl == "0.05(N)"
+replace mrl =".2" if mrl == "0.2(N)"
+destring mrl, replace
 
 * weighted toxicity variable creation (using our lbs/acre variable)
 gen use_tox_weighted =  lbs_per_acre *  mrl
