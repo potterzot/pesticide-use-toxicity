@@ -6,7 +6,7 @@
 log using weighted_tolerance.log, replace
 
 * import data
-use use "data/use_toxicity_merged.dta"
+use "data/use_toxicity_merged.dta"
 drop _merge
 
 * fix mrl variable and destring
