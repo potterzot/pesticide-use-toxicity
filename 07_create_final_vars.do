@@ -1,6 +1,7 @@
 * Creation of final analysis variables
 
 * set working directory
+cd "E:\Documents\Internship Stuff\Pesticide and Residue Project\pesticide-use-toxicity"
 
 * start log
 log using weighted_tolerance.log, replace
