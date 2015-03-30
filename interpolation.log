@@ -2,41 +2,80 @@
       name:  <unnamed>
        log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
   log type:  text
- opened on:  17 Mar 2015, 13:30:33
+ opened on:  30 Mar 2015, 15:29:03
 
 . 
-. * load the chemical use data and save to a tempfile
-. insheet using "data/chemical_use_ipol.csv"
-(14 vars, 115805 obs)
+. *load the data
+. insheet using "data/chemical_use_clean.csv"
+(17 vars, 89548 obs)
 
-. keep state year crop lbs_applied lbs_per_acre_app lbs_per_acre_yr num_apps pct_area_treated chemical_name chemical_type chemical_id
+. 
+. *sort and generate groupid
+. sort crop state chemical_name measure year
 
-. tempfile chemical_use
+. egen groupid = group(crop state chemical_name chemical_type measure)
 
-. save "`chemical_use'", replace
-(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000002.tmp not found)
+. 
+. *duplicates by groupid?
+. duplicates report groupid year
+
+Duplicates in terms of groupid year
+
+--------------------------------------
+   copies | observations       surplus
+----------+---------------------------
+        1 |        89548             0
+--------------------------------------
+
+. 
+. *save tempfile of all variables
+. tempfile original
+
+. save "`original'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000001.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000001.tmp saved
+
+. 
+. *tsset the data
+. tsset groupid year
+       panel variable:  groupid (unbalanced)
+        time variable:  year, 1990 to 2012, but with gaps
+                delta:  1 unit
+
+. tsfill, full
+
+. 
+. *save tempfile of just year and groupid
+. keep groupid year 
+
+. tempfile idyear
+
+. save "`idyear'"
 file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000002.tmp saved
 
 . 
-. * load the acres data
-. clear
+. *save tempfile of just categorical data, one row for each groupid
+. use "`original'"
 
-. insheet using "data/acres_clean.csv"
-(13 vars, 10734 obs)
+. drop year value
 
-. keep year crop state acres
+. bysort groupid: keep if _n==1
+(65268 observations deleted)
+
+. tempfile categorical
+
+. save "`categorical'", replace
+(note: file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000003.tmp not found)
+file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000003.tmp saved
 
 . 
 . * merge the year and value data to the categorical data
-. merge 1:m crop state year using "`chemical_use'"
+. merge 1:m groupid using "`idyear'"
 
     Result                           # of obs.
     -----------------------------------------
-    not matched                        10,343
-        from master                     8,894  (_merge==1)
-        from using                      1,449  (_merge==2)
-
-    matched                           114,356  (_merge==3)
+    not matched                             0
+    matched                           558,440  (_merge==3)
     -----------------------------------------
 
 . 
@@ -45,42 +84,130 @@ file C:\Users\POTTER~1\AppData\Local\Temp\ST_02000002.tmp saved
 
                  _merge |      Freq.     Percent        Cum.
 ------------------------+-----------------------------------
-        master only (1) |      8,894        7.13        7.13
-         using only (2) |      1,449        1.16        8.29
-            matched (3) |    114,356       91.71      100.00
+            matched (3) |    558,440      100.00      100.00
 ------------------------+-----------------------------------
-                  Total |    124,699      100.00
+                  Total |    558,440      100.00
 
-. keep if _merge!=1
-(8894 observations deleted)
+. assert _merge==3 //all merged correctly
 
 . drop _merge
 
 . 
-. *generate lbs per acre
-. gen lbs_per_acre = lbs_applied / acres
-(66298 missing values generated)
+. *now add the values
+. merge 1:1 groupid year using "`original'"
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                       468,892
+        from master                   468,892  (_merge==1)
+        from using                          0  (_merge==2)
+
+    matched                            89,548  (_merge==3)
+    -----------------------------------------
 
 . 
-. * remove spaces...
-. replace crop = trim(crop)
-(115805 real changes made)
+. *check merge
+. tab _merge
 
-. replace chemical_name = trim(chemical_name)
+                 _merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+        master only (1) |    468,892       83.96       83.96
+            matched (3) |     89,548       16.04      100.00
+------------------------+-----------------------------------
+                  Total |    558,440      100.00
+
+. drop _merge
+
+. 
+. *interopolate missing years
+. bysort groupid: ipolate value year, gen(ivalue)
+(433682 missing values generated)
+
+. 
+. * EXTRAPOLATION CODE GOES HERE
+. * for now, just a flat value
+. * by groupid: replace ivalue = (ivalue[_n-1]) if missing(ivalue)==1
+. 
+. * linear trend based on last 5 year difference
+. * use the difference, and the last known difference becomes that for all years
+. 
+. * first generate an average of the past 5 years going forward and replace missing values
+. by groupid: gen avg_last_5_years = (ivalue[_n] - ivalue[_n-5])/5
+(490068 missing values generated)
+
+. by groupid: replace avg_last_5_years = avg_last_5_years[_n-1] if missing(avg_last_5_years)==1
+(47575 real changes made)
+
+. by groupid: replace ivalue = (ivalue[_n-1] + avg_last_5_years[_n-1]) if missing(ivalue)==1
+(47575 real changes made)
+
+. 
+. * then do the same for earlier years. This is done by sorting descending on year and 
+. * repeating the process
+. gsort +groupid -year
+
+. by groupid: replace avg_last_5_years = avg_last_5_years[_n-1] if missing(avg_last_5_years)==1
+(85625 real changes made)
+
+. by groupid: replace ivalue = (ivalue[_n-1] - avg_last_5_years[_n-5]) if missing(ivalue)==1
+(41805 real changes made)
+
+. by groupid: replace ivalue = (ivalue[_n-1]) if missing(ivalue)==1 | ivalue<0
+(121911 real changes made, 9103 to missing)
+
+. 
+. *after that, if there are still missing values, just set them equal to the first and last known value
+. *this will make cases for which we have only one measure be the same for all years
+. gsort +groupid +year
+
+. by groupid: replace ivalue = ivalue[_n-1] if missing(ivalue)==1
+(79424 real changes made)
+
+. gsort +groupid -year
+
+. by groupid: replace ivalue = ivalue[_n-1] if missing(ivalue)==1
 (0 real changes made)
 
 . 
-. *save the data
-. sort crop state year chemical_name
+. *reshape the data from long to wide, so that each measure has it's own variable
+. drop period dataitem domain domaincategory value_raw measure value groupid
 
-. save "data/use_acres_merged.dta", replace
-file data/use_acres_merged.dta saved
+. reshape wide ivalue, i(crop state chemical_type chemical_id year) j(measurefac)
+(note: j = 1 2 3 4 5)
+avg_last_5_years not constant within crop state chemical_type chemical_id year
+Type "reshape error" for a listing of the problem observations.
+r(9);
+
+end of do-file
+
+r(9);
+
+. drop avg_last_5_years
+
+. reshape wide ivalue, i(crop state chemical_type chemical_id year) j(measurefac)
+(note: j = 1 2 3 4 5)
+
+Data                               long   ->   wide
+-----------------------------------------------------------------------------
+Number of obs.                   558440   ->  115805
+Number of variables                  11   ->      14
+j variable (5 values)        measurefac   ->   (dropped)
+xij variables:
+                                 ivalue   ->   ivalue1 ivalue2 ... ivalue5
+-----------------------------------------------------------------------------
 
 . 
-. *close log
-. log close
-      name:  <unnamed>
-       log:  I:\nick\code\pesticide-use-toxicity\interpolation.log
-  log type:  text
- closed on:  17 Mar 2015, 13:30:35
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+. rename ivalue1 lbs_applied
+
+. 
+. rename ivalue2 lbs_per_acre_app
+
+. 
+. rename ivalue3 lbs_per_acre_yr
+
+. 
+. rename ivalue4 num_apps
+
+. 
+. rename ivalue5 pct_area_treated
+

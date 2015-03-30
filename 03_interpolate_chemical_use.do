@@ -71,11 +71,32 @@ bysort groupid: ipolate value year, gen(ivalue)
 
 * EXTRAPOLATION CODE GOES HERE
 * for now, just a flat value
-by groupid: replace ivalue=ivalue[_n-1] if missing(ivalue)==1
+* by groupid: replace ivalue = (ivalue[_n-1]) if missing(ivalue)==1
 
+* linear trend based on last 5 year difference
+* use the difference, and the last known difference becomes that for all years
+
+* first generate an average of the past 5 years going forward and replace missing values
+by groupid: gen avg_last_5_years = (ivalue[_n] - ivalue[_n-5])/5
+by groupid: replace avg_last_5_years = avg_last_5_years[_n-1] if missing(avg_last_5_years)==1
+by groupid: replace ivalue = (ivalue[_n-1] + avg_last_5_years[_n-1]) if missing(ivalue)==1
+
+* then do the same for earlier years. This is done by sorting descending on year and 
+* repeating the process
+gsort +groupid -year
+by groupid: replace avg_last_5_years = avg_last_5_years[_n-1] if missing(avg_last_5_years)==1
+by groupid: replace ivalue = (ivalue[_n-1] - avg_last_5_years[_n-5]) if missing(ivalue)==1
+by groupid: replace ivalue = (ivalue[_n-1]) if missing(ivalue)==1 | ivalue<0
+
+*after that, if there are still missing values, just set them equal to the first and last known value
+*this will make cases for which we have only one measure be the same for all years
+gsort +groupid +year
+by groupid: replace ivalue = ivalue[_n-1] if missing(ivalue)==1
+gsort +groupid -year
+by groupid: replace ivalue = ivalue[_n-1] if missing(ivalue)==1
 
 *reshape the data from long to wide, so that each measure has it's own variable
-drop period dataitem domain domaincategory value_raw measure value groupid
+drop period dataitem domain domaincategory value_raw measure value groupid avg_last_5_years
 reshape wide ivalue, i(crop state chemical_type chemical_id year) j(measurefac)
 rename ivalue1 lbs_applied
 rename ivalue2 lbs_per_acre_app
@@ -85,7 +106,6 @@ rename ivalue5 pct_area_treated
 
 
 *save the interpolated and reshaped use data
-
 sort crop state chemical_id year
 outsheet using "data/chemical_use_ipol.csv", comma nolabel replace
 
