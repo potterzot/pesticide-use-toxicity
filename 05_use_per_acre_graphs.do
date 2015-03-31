@@ -1,5 +1,3 @@
-*set working directory
-
 *set log file
 log using "use_graphs.log", replace
 
@@ -23,8 +21,12 @@ twoway (line lbs_per_acre year if chemical_type == "FERTILIZER" & crop == "SOYBE
 *US Pesticides by crop
 twoway (line lbs_per_acre year if chemical_type == "HERBICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick)) if state == "UNITED STATES" & crop == "SOYBEANS", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Soybeans) legend(order(1 "Herbicide" 2 "Insecticide" 3 "Fungicide"))
 twoway (line lbs_per_acre year if chemical_type == "HERBICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick)) if state == "UNITED STATES" & crop == "CORN", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Corn) legend(order(1 "Herbicide" 2 "Insecticide" 3 "Fungicide"))
-twoway (line lbs_per_acre year if chemical_type == "HERBICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick)) if state == "UNITED STATES" & crop == "COTTON", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Cotton) legend(order(1 "Herbicide" 2 "Insecticide" 3 "Fungicide"))
 twoway (line lbs_per_acre year if chemical_type == "HERBICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick)) if state == "UNITED STATES" & crop == "COTTON, UPLAND", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Upland Cotton) legend(order(1 "Herbicide" 2 "Insecticide" 3 "Fungicide"))
+
+*Insecticide and fungicide only
+twoway (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick) lcolor(maroon)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick) lcolor("Forest green")) if state == "UNITED STATES" & crop == "SOYBEANS", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Soybeans) legend(order(1 "Insecticide" 2 "Fungicide"))
+twoway (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick) lcolor(maroon)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick) lcolor("Forest green")) if state == "UNITED STATES" & crop == "CORN", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Corn) legend(order(1 "Insecticide" 2 "Fungicide"))
+twoway (line lbs_per_acre year if chemical_type == "INSECTICIDE", lwidth(medthick) lcolor(maroon)) (line lbs_per_acre year if chemical_type == "FUNGICIDE", lwidth(medthick) lcolor("Forest green")) if state == "UNITED STATES" & crop == "COTTON, UPLAND", ytitle(Lbs Applied Per Acre) xtitle(Year) title(US Pesticide Use Per Acre) subtitle(Upland Cotton) legend(order(1 "Insecticide" 2 "Fungicide"))
 
 *Re-collapse for totals
 collapse (sum) lbs_per_acre, by(year state chemical_type)
