@@ -1,0 +1,17 @@
+* set working directory
+cd "E:\Documents\Internship Stuff\Pesticide and Residue Project\pesticide-use-toxicity"
+* start log
+log using "stata_to_web.log"
+* import data
+insheet using "Data/use_x_tox_var.csv"
+
+* keep what we want
+keep if state == "UNITED STATES"
+drop if crop == "COTTON"
+
+* collapse
+collapse (sum) use_tox_weighted, by(year crop chemical_type)
+
+*reshape (not working)
+egen groupid = group( crop chemical_type)
+reshape wide  use_tox_weighted, i(year) j( groupid)
